@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TA Dashboard - Looker Style</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #262d33;
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            background: white;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .dashboard-title {
+            font-size: 24px;
+            font-weight: 500;
+            color: #262d33;
+            margin-bottom: 8px;
+        }
+
+        .dashboard-subtitle {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 20px 16px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            transition: box-shadow 0.2s;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .metric-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: 600;
+            color: #262d33;
+            margin-bottom: 6px;
+            line-height: 1;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 500;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .metric-change {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .change-up {
+            color: #28a745;
+        }
+
+        .change-down {
+            color: #dc3545;
+        }
+
+        .change-neutral {
+            color: #6c757d;
+        }
+
+        .arrow {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 24px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #262d33;
+        }
+
+        .chart-filters {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #dee2e6;
+            background: white;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+        }
+
+        .filter-btn.active {
+            background: #4285f4;
+            color: white;
+            border-color: #4285f4;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            font-weight: 500;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .department-name {
+            font-weight: 500;
+            color: #262d33;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+        }
+
+        .bar-label {
+            min-width: 200px;
+            font-size: 13px;
+            color: #495057;
+        }
+
+        .bar-wrapper {
+            flex: 1;
+            height: 32px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .bar-fill.open {
+            background: linear-gradient(90deg, #7c5cff, #9575ff);
+        }
+
+        .bar-fill.approved {
+            background: linear-gradient(90deg, #4ecdc4, #44a5a0);
+        }
+
+        .bar-value {
+            min-width: 70px;
+            text-align: right;
+            font-size: 13px;
+            font-weight: 500;
+            color: #262d33;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-excellent {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-good {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-poor {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 968px) {
+            .grid-2col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stacked-bar-chart {
+            margin-top: 20px;
+        }
+
+        .stacked-bar-item {
+            margin-bottom: 16px;
+        }
+
+        .stacked-bar-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .stacked-bar-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #262d33;
+        }
+
+        .stacked-bar-total {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .stacked-bar {
+            display: flex;
+            height: 32px;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        }
+
+        .stacked-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 500;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #495057;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .highlight-number {
+            font-size: 28px;
+            font-weight: 500;
+            color: #7c5cff;
+            margin: 16px 0 8px 0;
+        }
+
+        .info-text {
+            font-size: 13px;
+            color: #6c757d;
+            line-height: 1.5;
+        }
+
+        .time-stage-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+        }
+
+        .stage-label {
+            min-width: 200px;
+            font-size: 13px;
+            color: #495057;
+        }
+
+        .stage-bar-wrapper {
+            flex: 1;
+            height: 28px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stage-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd93d, #ffc107);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .distribution-bar {
+            display: flex;
+            height: 48px;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin: 16px 0;
+        }
+
+        .distribution-segment {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .distribution-segment .value {
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .pie-chart-container {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .pie-chart {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            position: relative;
+            background: conic-gradient(
+                #28a745 0deg 302deg,
+                #dc3545 302deg 360deg
+            );
+        }
+
+        .pie-legend {
+            flex: 1;
+        }
+
+        .pie-legend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+
+        .pie-legend-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .pie-legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+        }
+
+        .pie-legend-value {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .progress-item {
+            margin-bottom: 16px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            color: #262d33;
+        }
+
+        .progress-percentage {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 24px;
+            background: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 12px;
+            transition: width 0.6s ease;
+            position: relative;
+        }
+
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                rgba(255,255,255,0.3) 0%,
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.1) 100%
+            );
+            border-radius: 12px;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .download-btn {
+            padding: 10px 20px;
+            border: 2px solid #4285f4;
+            background: white;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4285f4;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .download-btn:hover {
+            background: #4285f4;
+            color: white;
+        }
+
+        .download-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .pace-compact {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 16px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 8px;
+            border: 2px solid #4285f4;
+        }
+
+        .pace-main {
+            flex: 1;
+        }
+
+        .pace-quarters {
+            display: flex;
+            gap: 12px;
+        }
+
+        .pace-quarter {
+            text-align: center;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            min-width: 70px;
+        }
+
+        .pace-quarter.current {
+            background: #fff3cd;
+            border: 2px solid #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <div class="dashboard-title">Talent Acquisition Dashboard</div>
+        <div class="dashboard-subtitle">Comprehensive recruitment metrics and performance tracking</div>
+        
+        <div class="download-buttons" style="margin-top: 16px;">
+            <button class="download-btn" onclick="window.print()">
+                <svg fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z"/>
+                </svg>
+                Export as PDF
+            </button>
+            <button class="download-btn" onclick="exportToCSV()">
+                <svg fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/>
+                </svg>
+                Download Data (CSV)
+            </button>
+            <button class="download-btn" onclick="copyToClipboard()">
+                <svg fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
+                    <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/>
+                </svg>
+                Copy Link
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function exportToCSV() {
+            const csvContent = `Metric,Value
+Open Reqs,187
+Approved Reqs,142
+Total Hires,89
+Total Applications,2547
+Candidate NPS,72
+New Joiners This Month,76
+TA Team Size,24`;
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ta-dashboard-data.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function copyToClipboard() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Dashboard link copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        const style = document.createElement('style');
+        style.textContent = `
+            @media print {
+                body { background: white; }
+                .download-buttons { display: none !important; }
+                .chart-filters { display: none !important; }
+                .chart-container { page-break-inside: avoid; }
+                .metrics-grid {
+                    grid-template-columns: repeat(7, 1fr) !important;
+                    gap: 12px !important;
+                }
+                .metric-card {
+                    min-height: 120px !important;
+                    padding: 20px 16px !important;
+                }
+                .metric-value {
+                    font-size: 32px !important;
+                }
+                .metric-label {
+                    font-size: 12px !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+
+    <!-- 1. Core Metrics with Month-over-Month Change -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-label">Open Reqs</div>
+            <div class="metric-value">187</div>
+            <div class="metric-change change-up">
+                <span class="arrow">↑</span>
+                <span>+12 from last month</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Approved Reqs</div>
+            <div class="metric-value">142</div>
+            <div class="metric-change change-up">
+                <span class="arrow">↑</span>
+                <span>+8 from last month</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Total Hires</div>
+            <div class="metric-value">89</div>
+            <div class="metric-change change-down">
+                <span class="arrow">↓</span>
+                <span>-15 from last month</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Total Applications</div>
+            <div class="metric-value">2,547</div>
+            <div class="metric-change change-up">
+                <span class="arrow">↑</span>
+                <span>+342 from last month</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Candidate NPS</div>
+            <div class="metric-value">72</div>
+            <div class="metric-change change-up">
+                <span class="arrow">↑</span>
+                <span>+3 from last month</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">New Joiners This Month</div>
+            <div class="metric-value">76</div>
+            <div class="metric-change change-down">
+                <span class="arrow">↓</span>
+                <span>-8 from last month</span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">TA Team Size</div>
+            <div class="metric-value">24</div>
+            <div class="metric-change change-neutral">
+                <span class="arrow">→</span>
+                <span>No change</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Pace to Goal - CONDENSED -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <div class="chart-title">Pace to Goal - 2025 Hiring Plan Progress</div>
+            <div class="chart-filters">
+                <button class="filter-btn active">YTD</button>
+                <button class="filter-btn">Annual</button>
+            </div>
+        </div>
+        
+        <div class="pace-compact">
+            <div class="pace-main">
+                <div class="progress-header">
+                    <div class="progress-label">
+                        <strong style="font-size: 16px;">Overall Company Target</strong>
+                        <span style="color: #6c757d; font-size: 13px; margin-left: 10px;">456 of 520 | 64 remaining</span>
+                    </div>
+                    <div class="progress-percentage" style="color: #ff9800; font-size: 22px;">88%</div>
+                </div>
+                <div class="progress-bar-container" style="height: 32px; margin-top: 10px;">
+                    <div class="progress-bar-fill" style="width: 88%; background: linear-gradient(90deg, #ff9800, #ffb74d);"></div>
+                </div>
+            </div>
+            
+            <div class="pace-quarters">
+                <div class="pace-quarter">
+                    <div style="font-size: 16px; font-weight: 600; color: #28a745;">Q1</div>
+                    <div style="font-size: 11px; color: #6c757d; margin-top: 2px;">142/130</div>
+                    <div style="font-size: 10px; color: #28a745; margin-top: 1px;">109%</div>
+                </div>
+                <div class="pace-quarter">
+                    <div style="font-size: 16px; font-weight: 600; color: #28a745;">Q2</div>
+                    <div style="font-size: 11px; color: #6c757d; margin-top: 2px;">156/140</div>
+                    <div style="font-size: 10px; color: #28a745; margin-top: 1px;">111%</div>
+                </div>
+                <div class="pace-quarter">
+                    <div style="font-size: 16px; font-weight: 600; color: #28a745;">Q3</div>
+                    <div style="font-size: 11px; color: #6c757d; margin-top: 2px;">158/150</div>
+                    <div style="font-size: 10px; color: #28a745; margin-top: 1px;">105%</div>
+                </div>
+                <div class="pace-quarter current">
+                    <div style="font-size: 16px; font-weight: 600; color: #ff9800;">Q4</div>
+                    <div style="font-size: 11px; color: #6c757d; margin-top: 2px;">0/100</div>
+                    <div style="font-size: 10px; color: #ff9800; margin-top: 1px;">Current</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Headcount per Department (Open vs Approved) -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <div class="chart-title">Headcount per Department - Open vs Approved Requisitions</div>
+            <div class="chart-filters">
+                <button class="filter-btn active">October 2025</button>
+                <button class="filter-btn">Quarter View</button>
+            </div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Department</th>
+                    <th style="background: #e8e3ff;">Open Reqs<br><span style="font-size: 11px; font-weight: 400; color: #6c757d;">Active Hiring</span></th>
+                    <th style="background: #d4f4f4;">Approved Reqs<br><span style="font-size: 11px; font-weight: 400; color: #6c757d;">Not Yet Active</span></th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="department-name">Engineering</td>
+                    <td><strong style="color: #7c5cff; font-size: 18px;">52</strong></td>
+                    <td><strong style="color: #4ecdc4; font-size: 18px;">37</strong></td>
+                    <td><strong>89</strong></td>
+                </tr>
+                <tr>
+                    <td class="department-name">COGS/Operations</td>
+                    <td><strong style="color: #7c5cff; font-size: 18px;">42</strong></td>
+                    <td><strong style="color: #4ecdc4; font-size: 18px;">30</strong></td>
+                    <td><strong>72</strong></td>
+                </tr>
+                <tr>
+                    <td class="department-name">Product & Marketing</td>
+                    <td><strong style="color: #7c5cff; font-size: 18px;">27</strong></td>
+                    <td><strong style="color: #4ecdc4; font-size: 18px;">21</strong></td>
+                    <td><strong>48</strong></td>
+                </tr>
+                <tr>
+                    <td class="department-name">G&A</td>
+                    <td><strong style="color: #7c5cff; font-size: 18px;">18</strong></td>
+                    <td><strong style="color: #4ecdc4; font-size: 18px;">15</strong></td>
+                    <td><strong>33</strong></td>
+                </tr>
+                <tr>
+                    <td class="department-name">Revenue & Partnerships</td>
+                    <td><strong style="color: #7c5cff; font-size: 18px;">15</strong></td>
+                    <td><strong style="color: #4ecdc4; font-size: 18px;">12</strong></td>
+                    <td><strong>27</strong></td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr style="background: #f8f9fa; font-weight: 600;">
+                    <td>Total</td>
+                    <td><strong style="color: #7c5cff; font-size: 18px;">154</strong></td>
+                    <td><strong style="color: #4ecdc4; font-size: 18px;">115</strong></td>
+                    <td><strong>269</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <div class="legend" style="margin-top: 16px;">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #7c5cff;"></div>
+                <span>Open Reqs - Active hiring in progress</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4ecdc4;"></div>
+                <span>Approved Reqs - Cleared but not yet active</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Recruitment Metrics Summary -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <div class="chart-title">Recruitment Metrics Summary - Open & Approved</div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Department</th>
+                    <th>Open Reqs</th>
+                    <th>Approved Reqs</th>
+                    <th>Total Applications</th>
+                    <th>Active Candidates</th>
+                    <th>Offers Extended</th>
+                    <th>Hires MTD</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="department-name">Engineering</td>
+                    <td><strong>52</strong></td>
+                    <td><strong>37</strong></td>
+                    <td>987</td>
+                    <td>142</td>
+                    <td>34</td>
+                    <td>34</td>
+                </tr>
+                <tr>
+                    <td class="department-name">COGS/Operations</td>
+                    <td><strong>42</strong></td>
+                    <td><strong>30</strong></td>
+                    <td>756</td>
+                    <td>98</td>
+                    <td>28</td>
+                    <td>28</td>
+                </tr>
+                <tr>
+                    <td class="department-name">Product & Marketing</td>
+                    <td><strong>27</strong></td>
+                    <td><strong>21</strong></td>
+                    <td>432</td>
+                    <td>67</td>
+                    <td>15</td>
+                    <td>15</td>
+                </tr>
+                <tr>
+                    <td class="department-name">G&A</td>
+                    <td><strong>18</strong></td>
+                    <td><strong>15</strong></td>
+                    <td>245</td>
+                    <td>41</td>
+                    <td>12</td>
+                    <td>12</td>
+                </tr>
+                <tr>
+                    <td class="department-name">Revenue & Partnerships</td>
+                    <td><strong>15</strong></td>
+                    <td><strong>12</strong></td>
+                    <td>127</td>
+                    <td>28</td>
+                    <td>11</td>
+                    <td>0</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr style="background: #f8f9fa; font-weight: 600;">
+                    <td>Total</td>
+                    <td><strong>154</strong></td>
+                    <td><strong>115</strong></td>
+                    <td>2,547</td>
+                    <td>376</td>
+                    <td>100</td>
+                    <td>89</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- 5. Monthly Hires per Department -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <div class="chart-title">Monthly Hires by Department</div>
+            <div class="chart-filters">
+                <button class="filter-btn">Last 3 Months</button>
+                <button class="filter-btn active">Last 6 Months</button>
+                <button class="filter-btn">YTD</button>
+            </div>
+        </div>
+        <div class="stacked-bar-chart">
+            <div class="stacked-bar-item">
+                <div class="stacked-bar-header">
+                    <div class="stacked-bar-label">October 2025</div>
+                    <div class="stacked-bar-total">89 hires</div>
+                </div>
+                <div class="stacked-bar">
+                    <div class="stacked-segment" style="width: 38%; background: #7c5cff;">34</div>
+                    <div class="stacked-segment" style="width: 31%; background: #4ecdc4;">28</div>
+                    <div class="stacked-segment" style="width: 17%; background: #ff6b6b;">15</div>
+                    <div class="stacked-segment" style="width: 13%; background: #ffd93d;">12</div>
+                </div>
+            </div>
+            <div class="stacked-bar-item">
+                <div class="stacked-bar-header">
+                    <div class="stacked-bar-label">September 2025</div>
+                    <div class="stacked-bar-total">104 hires</div>
+                </div>
+                <div class="stacked-bar">
+                    <div class="stacked-segment" style="width: 37%; background: #7c5cff;">38</div>
+                    <div class="stacked-segment" style="width: 32%; background: #4ecdc4;">33</div>
+                    <div class="stacked-segment" style="width: 18%; background: #ff6b6b;">19</div>
+                    <div class="stacked-segment" style="width: 13%; background: #ffd93d;">14</div>
+                </div>
+            </div>
+            <div class="stacked-bar-item">
+                <div class="stacked-bar-header">
+                    <div class="stacked-bar-label">August 2025</div>
+                    <div class="stacked-bar-total">96 hires</div>
+                </div>
+                <div class="stacked-bar">
+                    <div class="stacked-segment" style="width: 35%; background: #7c5cff;">34</div>
+                    <div class="stacked-segment" style="width: 34%; background: #4ecdc4;">33</div>
+                    <div class="stacked-segment" style="width: 18%; background: #ff6b6b;">17</div>
+                    <div class="stacked-segment" style="width: 13%; background: #ffd93d;">12</div>
+                </div>
+            </div>
+            <div class="stacked-bar-item">
+                <div class="stacked-bar-header">
+                    <div class="stacked-bar-label">July 2025</div>
+                    <div class="stacked-bar-total">112 hires</div>
+                </div>
+                <div class="stacked-bar">
+                    <div class="stacked-segment" style="width: 40%; background: #7c5cff;">45</div>
+                    <div class="stacked-segment" style="width: 30%; background: #4ecdc4;">34</div>
+                    <div class="stacked-segment" style="width: 18%; background: #ff6b6b;">20</div>
+                    <div class="stacked-segment" style="width: 12%; background: #ffd93d;">13</div>
+                </div>
+            </div>
+            <div class="stacked-bar-item">
+                <div class="stacked-bar-header">
+                    <div class="stacked-bar-label">June 2025</div>
+                    <div class="stacked-bar-total">118 hires</div>
+                </div>
+                <div class="stacked-bar">
+                    <div class="stacked-segment" style="width: 42%; background: #7c5cff;">50</div>
+                    <div class="stacked-segment" style="width: 29%; background: #4ecdc4;">34</div>
+                    <div class="stacked-segment" style="width: 17%; background: #ff6b6b;">20</div>
+                    <div class="stacked-segment" style="width: 12%; background: #ffd93d;">14</div>
+                </div>
+            </div>
+            <div class="stacked-bar-item">
+                <div class="stacked-bar-header">
+                    <div class="stacked-bar-label">May 2025</div>
+                    <div class="stacked-bar-total">108 hires</div>
+                </div>
+                <div class="stacked-bar">
+                    <div class="stacked-segment" style="width: 41%; background: #7c5cff;">44</div>
+                    <div class="stacked-segment" style="width: 31%; background: #4ecdc4;">33</div>
+                    <div class="stacked-segment" style="width: 16%; background: #ff6b6b;">17</div>
+                    <div class="stacked-segment" style="width: 12%; background: #ffd93d;">14</div>
+                </div>
+            </div>
+        </div>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #7c5cff;"></div>
+                <span>Engineering</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4ecdc4;"></div>
+                <span>COGS/Operations</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ff6b6b;"></div>
+                <span>Product & Marketing</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffd93d;"></div>
+                <span>G&A</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #95e1d3;"></div>
+                <span>Revenue & Partnerships</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. HC Types per Department -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <div class="chart-title">HC Types per Department</div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Department</th>
+                    <th style="background: #e7f3ff;">2025 Plan</th>
+                    <th style="background: #fff3e0;">Backfill</th>
+                    <th style="background: #e8f5e9;">Net New</th>
+                    <th style="background: #fce4ec;">Exceptional</th>
+                    <th style="background: #fff3cd;">Total Non-Plan</th>
+                    <th style="background: #f8d7da;">Variance</th>
+                    <th>Total Reqs</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="department-name">Engineering</td>
+                    <td>45</td>
+                    <td>18</td>
+                    <td>21</td>
+                    <td>5</td>
+                    <td><strong>44</strong></td>
+                    <td><strong style="color: #dc3545;">-98%</strong></td>
+                    <td><strong>89</strong></td>
+                </tr>
+                <tr>
+                    <td class="department-name">COGS/Operations</td>
+                    <td>38</td>
+                    <td>22</td>
+                    <td>9</td>
+                    <td>3</td>
+                    <td><strong>34</strong></td>
+                    <td><strong style="color: #dc3545;">-89%</strong></td>
+                    <td><strong>72</strong></td>
+                </tr>
+                <tr>
+                    <td class="department-name">Product & Marketing</td>
+                    <td>28</td>
+                    <td>8</td>
+                    <td>10</td>
+                    <td>2</td>
+                    <td><strong>20</strong></td>
+                    <td><strong style="color: #dc3545;">-71%</strong></td>
+                    <td><strong>48</strong></td>
+                </tr>
+                <tr>
+                    <td class="department-name">G&A</td>
+                    <td>20</td>
+                    <td>7</td>
+                    <td>5</td>
+                    <td>1</td>
+                    <td><strong>13</strong></td>
+                    <td><strong style="color: #dc3545;">-65%</strong></td>
+                    <td><strong>33</strong></td>
+                </tr>
+                <tr>
+                    <td class="department-name">Revenue & Partnerships</td>
+                    <td>18</td>
+                    <td>5</td>
+                    <td>3</td>
+                    <td>1</td>
+                    <td><strong>9</strong></td>
+                    <td><strong style="color: #dc3545;">-50%</strong></td>
+                    <td><strong>27</strong></td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr style="background: #f8f9fa; font-weight: 600;">
+                    <td>Total</td>
+                    <td>149</td>
+                    <td>60</td>
+                    <td>48</td>
+                    <td>12</td>
+                    <td><strong>120</strong></td>
+                    <td><strong style="color: #dc3545;">-81%</strong></td>
+                    <td><strong>269</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+        <div class="info-text" style="margin-top: 16px;">
+            <strong>Variance shows impact of unplanned roles:</strong> Total Non-Plan roles (Backfill + Net New + Exceptional) represent additional workload beyond the 2025 Plan. Negative variance indicates % increase in non-strategic hiring requirements, forcing the TA team to deprioritize planned roles.
+        </div>
+    </div>
+
+    <!-- 7. Offer Acceptance Rate by Department -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <div class="chart-title">Offer Acceptance Rate by Department</div>
+            <div class="chart-filters">
+                <button class="filter-btn active">October 2025</button>
+                <button class="filter-btn">Last 3 Months</button>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Department</th>
+                    <th>Offers Made</th>
+                    <th>Offers Accepted</th>
+                    <th>Offers Declined</th>
+                    <th>Acceptance Rate</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="department-name">G&A</td>
+                    <td>12</td>
+                    <td>11</td>
+                    <td>1</td>
+                    <td><strong>91.7%</strong></td>
+                    <td><span class="status-badge status-excellent">Excellent</span></td>
+                </tr>
+                <tr>
+                    <td class="department-name">COGS/Operations</td>
+                    <td>28</td>
+                    <td>25</td>
+                    <td>3</td>
+                    <td><strong>89.3%</strong></td>
+                    <td><span class="status-badge status-excellent">Excellent</span></td>
+                </tr>
+                <tr>
+                    <td class="department-name">Product & Marketing</td>
+                    <td>15</td>
+                    <td>13</td>
+                    <td>2</td>
+                    <td><strong>86.7%</strong></td>
+                    <td><span class="status-badge status-good">Good</span></td>
+                </tr>
+                <tr>
+                    <td class="department-name">Revenue & Partnerships</td>
+                    <td>11</td>
+                    <td>9</td>
+                    <td>2</td>
+                    <td><strong>81.8%</strong></td>
+                    <td><span class="status-badge status-good">Good</span></td>
+                </tr>
+                <tr>
+                    <td class="department-name">Engineering</td>
+                    <td>34</td>
+                    <td>26</td>
+                    <td>8</td>
+                    <td><strong>76.5%</strong></td>
+                    <td><span class="status-badge status-warning">Monitor</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 8. Monthly Offer Acceptance vs Declines -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <div class="chart-title">Monthly Offer Acceptance vs Declines</div>
+        </div>
+        <div class="pie-chart-container">
+            <div class="pie-chart"></div>
+            <div class="pie-legend">
+                <div class="pie-legend-item">
+                    <div class="pie-legend-label">
+                        <div class="pie-legend-dot" style="background: #28a745;"></div>
+                        <span>Accepted</span>
+                    </div>
+                    <div class="pie-legend-value" style="color: #28a745;">84</div>
+                </div>
+                <div class="pie-legend-item">
+                    <div class="pie-legend-label">
+                        <div class="pie-legend-dot" style="background: #dc3545;"></div>
+                        <span>Declined</span>
+                    </div>
+                    <div class="pie-legend-value" style="color: #dc3545;">16</div>
+                </div>
+                <div class="pie-legend-item" style="background: #e7f3ff; border: 2px solid #4285f4;">
+                    <div class="pie-legend-label">
+                        <strong>Total Offers</strong>
+                    </div>
+                    <div class="pie-legend-value"><strong>100</strong></div>
+                </div>
+                <div class="pie-legend-item" style="background: #f8f9fa;">
+                    <div class="pie-legend-label">
+                        <strong>Acceptance Rate</strong>
+                    </div>
+                    <div class="pie-legend-value" style="color: #28a745;"><strong>84.0%</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 9. Requisitions Filled per Department -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <div class="chart-title">Requisitions Filled per Department (Monthly)</div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Department</th>
+                    <th>Oct Open</th>
+                    <th>Oct Filled</th>
+                    <th>Sep Open</th>
+                    <th>Sep Filled</th>
+                    <th>Aug Open</th>
+                    <th>Aug Filled</th>
+                    <th>Fill Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="department-name">Engineering</td>
+                    <td>52</td>
+                    <td><strong>34</strong></td>
+                    <td>56</td>
+                    <td><strong>38</strong></td>
+                    <td>61</td>
+                    <td><strong>34</strong></td>
+                    <td><span class="status-badge status-warning">59.6%</span></td>
+                </tr>
+                <tr>
+                    <td class="department-name">COGS/Operations</td>
+                    <td>42</td>
+                    <td><strong>28</strong></td>
+                    <td>45</td>
+                    <td><strong>33</strong></td>
+                    <td>48</td>
+                    <td><strong>33</strong></td>
+                    <td><span class="status-badge status-good">73.4%</span></td>
+                </tr>
+                <tr>
+                    <td class="department-name">Product & Marketing</td>
+                    <td>27</td>
+                    <td><strong>15</strong></td>
+                    <td>31</td>
+                    <td><strong>19</strong></td>
+                    <td>29</td>
+                    <td><strong>17</strong></td>
+                    <td><span class="status-badge status-warning">63.0%</span></td>
+                </tr>
+                <tr>
+                    <td class="department-name">G&A</td>
+                    <td>18</td>
+                    <td><strong>12</strong></td>
+                    <td>16</td>
+                    <td><strong>14</strong></td>
+                    <td>19</td>
+                    <td><strong>12</strong></td>
+                    <td><span class="status-badge status-excellent">73.1%</span></td>
+                </tr>
+                <tr>
+                    <td class="department-name">Revenue & Partnerships</td>
+                    <td>15</td>
+                    <td><strong>0</strong></td>
+                    <td>14</td>
+                    <td><strong>0</strong></td>
+                    <td>12</td>
+                    <td><strong>0</strong></td>
+                    <td><span class="status-badge status-poor">0.0%</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 10. Average Time to Fill by Department -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <div class="chart-title">Average Time to Fill by Department (Days)</div>
+            <div class="chart-filters">
+                <button class="filter-btn active">Last 90 Days</button>
+                <button class="filter-btn">Last 6 Months</button>
+            </div>
+        </div>
+        <div class="bar-chart">
+            <div class="bar-label">Engineering</div>
+            <div class="bar-wrapper">
+                <div class="bar-fill" style="width: 75%; background: linear-gradient(90deg, #ff6b6b, #ff8787);">68 days</div>
+            </div>
+            <div class="bar-value">68 days</div>
+        </div>
+        <div class="bar-chart">
+            <div class="bar-label">Product & Marketing</div>
+            <div class="bar-wrapper">
+                <div class="bar-fill" style="width: 65%; background: linear-gradient(90deg, #ff6b6b, #ff8787);">59 days</div>
+            </div>
+            <div class="bar-value">59 days</div>
+        </div>
+        <div class="bar-chart">
+            <div class="bar-label">Revenue & Partnerships</div>
+            <div class="bar-wrapper">
+                <div class="bar-fill" style="width: 55%; background: linear-gradient(90deg, #ff6b6b, #ff8787);">50 days</div>
+            </div>
+            <div class="bar-value">50 days</div>
+        </div>
+        <div class="bar-chart">
+            <div class="bar-label">COGS/Operations</div>
+            <div class="bar-wrapper">
+                <div class="bar-fill" style="width: 45%; background: linear-gradient(90deg, #4ecdc4, #44a5a0);">41 days</div>
+            </div>
+            <div class="bar-value">41 days</div>
+        </div>
+        <div class="bar-chart">
+            <div class="bar-label">G&A</div>
+            <div class="bar-wrapper">
+                <div class="bar-fill" style="width: 38%; background: linear-gradient(90deg, #4ecdc4, #44a5a0);">35 days</div>
+            </div>
+            <div class="bar-value">35 days</div>
+        </div>
+    </div>
+
+    <!-- 11 & 12. Average Time to Fill & Time to Start -->
+    <div class="grid-2col">
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-title">Average Time to Fill</div>
+            </div>
+            <div class="highlight-number">52.5 days</div>
+            <div class="info-text">Average time from job requisition approval to candidate accepting offer. Current month trending higher than 6-month average of 48.3 days.</div>
+            <div class="metric-change change-down" style="margin-top: 12px;">
+                <span class="arrow">↑</span>
+                <span>+4.2 days from last month</span>
+            </div>
+        </div>
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-title">Average Time to Start</div>
+            </div>
+            <div class="highlight-number">28.4 days</div>
+            <div class="info-text">Average time from offer acceptance to worker start date. Slight increase from previous month's 26.9 days average.</div>
+            <div class="metric-change change-down" style="margin-top: 12px;">
+                <span class="arrow">↑</span>
+                <span>+1.5 days from last month</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 13. Time in Each Stage -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <div class="chart-title">Average Time in Each Recruitment Stage (Days)</div>
+            <div class="chart-filters">
+                <button class="filter-btn active">All Departments</button>
+                <button class="filter-btn">Engineering</button>
+                <button class="filter-btn">COGS/Operations</button>
+            </div>
+        </div>
+        <div class="time-stage-bar">
+            <div class="stage-label">Recruiter Screen</div>
+            <div class="stage-bar-wrapper">
+                <div class="stage-bar-fill" style="width: 22%;">3.2 days</div>
+            </div>
+            <div class="bar-value">3.2 days</div>
+        </div>
+        <div class="time-stage-bar">
+            <div class="stage-label">Hiring Manager Interview</div>
+            <div class="stage-bar-wrapper">
+                <div class="stage-bar-fill" style="width: 38%;">5.5 days</div>
+            </div>
+            <div class="bar-value">5.5 days</div>
+        </div>
+        <div class="time-stage-bar">
+            <div class="stage-label">Case Study/Task</div>
+            <div class="stage-bar-wrapper">
+                <div class="stage-bar-fill" style="width: 52%;">7.6 days</div>
+            </div>
+            <div class="bar-value">7.6 days</div>
+        </div>
+        <div class="time-stage-bar">
+            <div class="stage-label">Final Interview</div>
+            <div class="stage-bar-wrapper">
+                <div class="stage-bar-fill" style="width: 28%;">4.1 days</div>
+            </div>
+            <div class="bar-value">4.1 days</div>
+        </div>
+        <div class="time-stage-bar">
+            <div class="stage-label">Elevate</div>
+            <div class="stage-bar-wrapper">
+                <div class="stage-bar-fill" style="width: 18%;">2.6 days</div>
+            </div>
+            <div class="bar-value">2.6 days</div>
+        </div>
+        <div class="time-stage-bar">
+            <div class="stage-label">Offer</div>
+            <div class="stage-bar-wrapper">
+                <div class="stage-bar-fill" style="width: 35%;">5.1 days</div>
+            </div>
+            <div class="bar-value">5.1 days</div>
+        </div>
+        <div class="info-text" style="margin-top: 16px; font-size: 14px;">
+            <strong>Total average time in process: 28.1 days</strong>
+        </div>
+    </div>
+
+    <!-- 14. Distribution of Total Time in Process -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <div class="chart-title">Distribution of Total Time in Process (Days)</div>
+        </div>
+        <div class="distribution-bar">
+            <div class="distribution-segment" style="width: 15%; background: #28a745;">
+                <span class="value">15%</span>
+                <span>0-20</span>
+            </div>
+            <div class="distribution-segment" style="width: 32%; background: #4ecdc4;">
+                <span class="value">32%</span>
+                <span>21-40</span>
+            </div>
+            <div class="distribution-segment" style="width: 28%; background: #ffd93d;">
+                <span class="value">28%</span>
+                <span>41-60</span>
+            </div>
+            <div class="distribution-segment" style="width: 18%; background: #ff9800;">
+                <span class="value">18%</span>
+                <span>61-80</span>
+            </div>
+            <div class="distribution-segment" style="width: 7%; background: #dc3545;">
+                <span class="value">7%</span>
+                <span>80+</span>
+            </div>
+        </div>
+        <div class="info-text" style="margin-top: 16px;">
+            <strong>Median:</strong> 38 days | <strong>Mean:</strong> 42.3 days
+        </div>
+    </div>
+
+    <!-- 15. Target Hires by Department (LAST) -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <div class="chart-title">Target Hires by Department, Quarter & Priority - Filled vs Approved</div>
+            <div class="chart-filters">
+                <button class="filter-btn active">All Quarters</button>
+                <button class="filter-btn">Q4 2025</button>
+                <button class="filter-btn">Q1 2026</button>
+            </div>
+        </div>
+        <div class="info-text" style="margin-bottom: 16px;">
+            <strong>Priority Levels:</strong> P0 (Critical), P1 (High), P2 (Medium), P3 (Low) | 
+            <strong style="color: #28a745;">Filled</strong> = Hired, 
+            <strong style="color: #4285f4;">Approved</strong> = Cleared to hire
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th rowspan="2">Department</th>
+                    <th rowspan="2">Quarter</th>
+                    <th colspan="2" style="background: #fce4ec; text-align: center;">P0 - Critical</th>
+                    <th colspan="2" style="background: #fff3e0; text-align: center;">P1 - High</th>
+                    <th colspan="2" style="background: #e7f3ff; text-align: center;">P2 - Medium</th>
+                    <th colspan="2" style="background: #e8f5e9; text-align: center;">P3 - Low</th>
+                    <th rowspan="2">Total</th>
+                </tr>
+                <tr>
+                    <th style="background: #fce4ec; font-size: 11px;">Filled</th>
+                    <th style="background: #fce4ec; font-size: 11px;">Approved</th>
+                    <th style="background: #fff3e0; font-size: 11px;">Filled</th>
+                    <th style="background: #fff3e0; font-size: 11px;">Approved</th>
+                    <th style="background: #e7f3ff; font-size: 11px;">Filled</th>
+                    <th style="background: #e7f3ff; font-size: 11px;">Approved</th>
+                    <th style="background: #e8f5e9; font-size: 11px;">Filled</th>
+                    <th style="background: #e8f5e9; font-size: 11px;">Approved</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Engineering Q1-Q4 -->
+                <tr>
+                    <td rowspan="4" class="department-name" style="vertical-align: middle;">Engineering</td>
+                    <td><strong>Q1</strong></td>
+                    <td style="background: #d4edda;">8</td>
+                    <td style="background: #cce5ff;">2</td>
+                    <td style="background: #d4edda;">12</td>
+                    <td style="background: #cce5ff;">3</td>
+                    <td style="background: #d4edda;">6</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">4</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td><strong>36</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Q2</strong></td>
+                    <td style="background: #d4edda;">10</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">14</td>
+                    <td style="background: #cce5ff;">2</td>
+                    <td style="background: #d4edda;">8</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">5</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td><strong>42</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Q3</strong></td>
+                    <td style="background: #d4edda;">12</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">16</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">9</td>
+                    <td style="background: #cce5ff;">2</td>
+                    <td style="background: #d4edda;">3</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td><strong>44</strong></td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                    <td><strong>Q4</strong></td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">8</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">12</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">6</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">2</td>
+                    <td><strong>28</strong></td>
+                </tr>
+                
+                <!-- COGS/Operations Q1-Q4 -->
+                <tr>
+                    <td rowspan="4" class="department-name" style="vertical-align: middle;">COGS/Operations</td>
+                    <td><strong>Q1</strong></td>
+                    <td style="background: #d4edda;">6</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">10</td>
+                    <td style="background: #cce5ff;">2</td>
+                    <td style="background: #d4edda;">8</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">5</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td><strong>33</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Q2</strong></td>
+                    <td style="background: #d4edda;">7</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">11</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">9</td>
+                    <td style="background: #cce5ff;">2</td>
+                    <td style="background: #d4edda;">6</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td><strong>37</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Q3</strong></td>
+                    <td style="background: #d4edda;">8</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">13</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">10</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">4</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td><strong>38</strong></td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                    <td><strong>Q4</strong></td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">6</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">10</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">8</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">3</td>
+                    <td><strong>27</strong></td>
+                </tr>
+
+                <!-- Product & Marketing Q1-Q4 -->
+                <tr>
+                    <td rowspan="4" class="department-name" style="vertical-align: middle;">Product & Marketing</td>
+                    <td><strong>Q1</strong></td>
+                    <td style="background: #d4edda;">3</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">5</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">4</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">2</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td><strong>17</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Q2</strong></td>
+                    <td style="background: #d4edda;">4</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">6</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">5</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">3</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td><strong>20</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Q3</strong></td>
+                    <td style="background: #d4edda;">5</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">7</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">4</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">2</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td><strong>20</strong></td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                    <td><strong>Q4</strong></td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">4</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">6</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">4</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td><strong>15</strong></td>
+                </tr>
+
+                <!-- G&A Q1-Q4 -->
+                <tr>
+                    <td rowspan="4" class="department-name" style="vertical-align: middle;">G&A</td>
+                    <td><strong>Q1</strong></td>
+                    <td style="background: #d4edda;">2</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">4</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">3</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">2</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td><strong>12</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Q2</strong></td>
+                    <td style="background: #d4edda;">3</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">5</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">4</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">3</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td><strong>16</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Q3</strong></td>
+                    <td style="background: #d4edda;">3</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">6</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">3</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">2</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td><strong>16</strong></td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                    <td><strong>Q4</strong></td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">2</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">5</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">3</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">2</td>
+                    <td><strong>12</strong></td>
+                </tr>
+
+                <!-- Revenue & Partnerships Q1-Q4 -->
+                <tr>
+                    <td rowspan="4" class="department-name" style="vertical-align: middle;">Revenue & Partnerships</td>
+                    <td><strong>Q1</strong></td>
+                    <td style="background: #d4edda;">1</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">2</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">2</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">1</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td><strong>7</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Q2</strong></td>
+                    <td style="background: #d4edda;">2</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">3</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">2</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">2</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td><strong>10</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Q3</strong></td>
+                    <td style="background: #d4edda;">2</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td style="background: #d4edda;">4</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">3</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td style="background: #d4edda;">1</td>
+                    <td style="background: #cce5ff;">0</td>
+                    <td><strong>11</strong></td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                    <td><strong>Q4</strong></td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">3</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">4</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">2</td>
+                    <td>0</td>
+                    <td style="background: #cce5ff;">1</td>
+                    <td><strong>10</strong></td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr style="background: #e7f3ff; font-weight: 600; font-size: 14px;">
+                    <td colspan="2"><strong>Total All Departments</strong></td>
+                    <td><strong>72</strong></td>
+                    <td style="color: #4285f4;"><strong>39</strong></td>
+                    <td><strong>118</strong></td>
+                    <td style="color: #4285f4;"><strong>35</strong></td>
+                    <td><strong>80</strong></td>
+                    <td style="color: #4285f4;"><strong>28</strong></td>
+                    <td><strong>45</strong></td>
+                    <td style="color: #4285f4;"><strong>13</strong></td>
+                    <td><strong>430</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <div class="info-text" style="margin-top: 16px;">
+            <strong>Summary:</strong> Total Filled = 315 | Total Approved = 115 | Q4 positions shown as Approved (not yet filled)
+        </div>
+    </div>
+
+</body>
+</html>
